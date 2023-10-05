@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Snake Game</title>
+  <style>
+    #game-board {
+      width: 300px;
+      height: 300px;
+      border: 1px solid #000;
+      position: relative;
+    }
+
+    .cell {
+      width: 30px;
+      height: 30px;
+      background-color: #0b702a;
+      border: 1px solid #fff;
+      position: absolute;
+    }
+
+    #start-button {
+      margin-top: 10px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-board"></div>
+  <button id="start-button">Start</button>
+  <script>
+    const gameBoard = document.getElementById("game-board");
+    const startButton = document.getElementById("start-button");
+    const gridSize = 10;
+    const cellSize = 30;
+    let snake = [];
+    let direction = "right";
+    let food = generateFood();
+    let score = 0;
+    let gameInterval;
+
+    function createCell(x, y) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      cell.style.left = x * cellSize + "px";
+      cell.style.top = y * cellSize + "px";
+      gameBoard.appendChild(cell);
+      return cell;
+    }
+
+    function generateFood() {
+      let foodX, foodY;
+      do {
+        foodX = Math.floor(Math.random() * gridSize);
+        foodY = Math.floor(Math.random() * gridSize);
+      } while (snake.some(segment => segment.x === foodX && segment.y === foodY));
+      return { x: foodX, y: foodY };
+    }
+
+    function updateGame() {
+      const head = { ...snake[0] };
+
+      if (direction === "right") head.x++;
+      if (direction === "left") head.x--;
+      if (direction === "up") head.y--;
+      if (direction === "down") head.y++;
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        food = generateFood();
+      } else {
+        snake.pop();
+      }
+
+      if (
+        head.x < 0 ||
+        head.x >= gridSize ||
+        head.y < 0 ||
+        head.y >= gridSize ||
+        snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+      ) {
+        clearInterval(gameInterval);
+        alert("Game Over! Score: " + score);
+        resetGame();
+        return;
+      }
+
+      while (gameBoard.firstChild) {
+        gameBoard.removeChild(gameBoard.firstChild);
+      }
+
+      snake.forEach(segment => createCell(segment.x, segment.y));
+      createCell(food.x, food.y);
+    }
+
+    function resetGame() {
+      snake = [{ x: 5, y: 5 }];
+      direction = "right";
+      food = generateFood();
+      score = 0;
+    }
+
+    startButton.addEventListener("click", () => {
+      resetGame();
+      gameInterval = setInterval(updateGame, 200); // Velocidade reduzida para 200ms
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "ArrowUp" && direction !== "down") direction = "up";
+      if (event.key === "ArrowDown" && direction !== "up") direction = "down";
+      if (event.key === "ArrowLeft" && direction !== "right") direction = "left";
+      if (event.key === "ArrowRight" && direction !== "left") direction = "right";
+    });
+  </script>
+</body>
+</html>
